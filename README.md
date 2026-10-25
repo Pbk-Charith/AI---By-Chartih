@@ -618,5 +618,140 @@ The final page of the PDF highlights these misconceptions:
 
 Machines represent language and other information using numerical vectors. Embeddings help models capture relationships between words and texts, while positional information and context help distinguish meanings. Similarity is useful for retrieval and comparison, but it does not establish truth or correctness.
 
+# Episode 5 : The Computational Brain of Machines
+
+> Summary of the supplied Namaste AI Notes PDF: “The Computational Brain of Machines” (the source PDF labels it Season 1 — Episode 06).
+
+## Overview
+
+This episode explains how a Large Language Model (LLM) generates text using a neural network and the Transformer architecture. It walks through tokenization and embeddings, next-token prediction, attention, layer normalization, causal self-attention, residual connections, feed-forward networks, and the final probability distribution used to select the next token.
+
+## 1. Neural Networks and Next-Token Prediction
+
+The PDF introduces a sentence-completion example: “The pizza is ____.” A model may assign different likelihoods to possible next words, such as “hot,” “ready,” or “delicious.”
+
+The process described in the notes is:
+1. A sentence is split into tokens.
+2. Tokens are converted into embeddings.
+3. The sequence of embeddings is passed into a neural network.
+4. The network estimates which token is likely to come next.
+5. The predicted token is added to the sequence, and the process repeats.
+
+Generation continues until a stopping condition is reached, such as an end-of-sequence token or another termination rule. The diagram on page 1 illustrates input token IDs and embeddings flowing through a trained neural network to candidate next-token predictions.
+
+## 2. What Does GPT Stand For?
+
+GPT stands for **Generative Pre-trained Transformer**:
+- **Generative:** Produces new text rather than simply retrieving a stored answer.
+- **Pre-trained:** The model has already learned patterns from training data before being used.
+- **Transformer:** The neural-network architecture used to process token sequences.
+
+The notes identify the 2017 research paper **“Attention Is All You Need”** as a major milestone in the development of Transformers. Before Transformers, architectures such as Recurrent Neural Networks (RNNs) and Long Short-Term Memory networks (LSTMs) were widely used for sequence tasks.
+
+## 3. Attention and Self-Attention
+
+**Attention** helps a model weigh different parts of the input when processing a token.
+
+**Self-attention** lets tokens use information from other tokens in the same sequence to build a more context-aware representation.
+
+The PDF's example is: “The cat sat on the mat because it was tired.” The surrounding words help the model interpret what “it” refers to. The illustration on page 3 presents the Transformer and attention as central components of an LLM.
+
+## 4. Token Embeddings and Positional Information
+
+Before a Transformer processes a sentence:
+1. Text is converted into tokens.
+2. Tokens are mapped to token embeddings.
+3. Positional information is incorporated so the model can represent token order.
+4. These representations are passed into the Transformer.
+
+Order matters: “Dog bites Man” and “Man bites Dog” use the same words but mean different things. Positional information helps a model account for sequence order.
+
+## 5. Layer Normalization (LayerNorm)
+
+The notes describe **Layer Normalization** as a technique for stabilizing the numerical values flowing through a neural network.
+
+- **Problem:** Activations can become too large or too small as they pass through layers.
+- **Purpose:** Normalization helps keep their scale more stable, supporting effective training and computation.
+
+The PDF asks whether normalization causes the model to lose memory, but does not provide an answer. This README therefore does not treat that question as resolved by the source.
+
+## 6. Masked / Causal Self-Attention
+
+In an autoregressive language model, **causal self-attention** prevents a token from attending to future tokens when predicting the next token.
+
+The notes explain:
+- **Masked:** Some positions are hidden from the current token.
+- **Causal:** Information flows from earlier tokens toward the current position, not from future tokens backward.
+
+This constraint helps ensure the model predicts using only the available preceding context during next-token training and generation.
+
+## 7. Multi-Head Attention
+
+**Multi-head attention** runs multiple attention operations in parallel. Different heads can learn to focus on different relationships or patterns in the input.
+
+The notes describe multi-head causal self-attention as allowing each token to gather information from earlier tokens through multiple attention heads while preventing access to future tokens.
+
+## 8. Residual / Skip Connections
+
+A **residual connection** adds a layer's input to its output rather than discarding the original representation.
+
+The PDF's example:
+- Original input: `x = [1, 2, 3]`
+- Attention output: `Attention(x) = [0.2, -0.5, 0.7]`
+- Residual addition: `x + Attention(x) = [1.2, 1.5, 3.7]`
+
+This lets a layer learn an update to the existing representation. The notes describe the result as preserving useful information while adding the layer's contribution.
+
+## 9. Feed-Forward Network (FFN)
+
+After attention, each token is processed by a **Feed-Forward Network (FFN)**. Unlike self-attention, which mixes information across tokens, the FFN applies transformations to each token representation independently.
+
+The notes summarize the distinction as:
+
+> Attention lets tokens communicate; FFN lets each token process what it learned.
+
+The diagram on page 5 shows an example feed-forward network with input nodes, a hidden layer, and an output node.
+
+## 10. Linear Layer and Softmax
+
+After the Transformer layers, the model produces scores for possible next tokens.
+
+- **Linear layer:** Transforms the hidden representation into scores for candidate tokens.
+- **Softmax:** Converts scores into a probability distribution over candidate tokens.
+
+The model then selects or samples a next token according to the generation strategy. The highest-probability token is not always chosen in every configuration; sampling and decoding settings can affect the result.
+
+The PDF compares the linear layer to a mathematical transformation and Softmax to a function that converts raw scores into probabilities that sum to 100%.
+
+## 11. Visual Learning Resources
+
+The PDF recommends these resources for exploring the architecture:
+- [LLM Visualization by Brendan Bycroft](https://bbycroft.net/llm)
+- [Andrej Karpathy's nanoGPT repository](https://github.com/karpathy/nanoGPT)
+- Research paper: **Attention Is All You Need** (referenced in the source PDF)
+
+The visualization is suggested as a way to follow the processing steps and inspect how information moves through an LLM.
+
+## Quick Revision
+
+| Term | Meaning |
+|---|---|
+| Neural network | A trainable computational model that transforms numerical inputs |
+| Next-token prediction | Estimating a likely next token from preceding context |
+| GPT | Generative Pre-trained Transformer |
+| Transformer | Neural-network architecture for processing sequences using attention |
+| Self-attention | Lets tokens use information from other tokens in a sequence |
+| Positional information | Represents the order of tokens |
+| LayerNorm | Normalizes activations to help stabilize computation |
+| Causal mask | Prevents access to future tokens during autoregressive prediction |
+| Multi-head attention | Multiple attention operations performed in parallel |
+| Residual connection | Adds a layer's input to its output |
+| FFN | Processes each token representation independently after attention |
+| Linear layer | Maps hidden representations to vocabulary scores |
+| Softmax | Converts scores into a probability distribution |
+
+## Main Takeaway
+
+An LLM generates text through repeated next-token prediction. Token embeddings and positional information enter Transformer layers, where attention builds context, normalization helps stabilize activations, residual connections preserve and update representations, and feed-forward networks transform each token. A final linear layer and Softmax produce scores and probabilities for possible next tokens.
 
 
