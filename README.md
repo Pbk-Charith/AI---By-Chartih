@@ -1,6 +1,8 @@
 # Artificial Intelligence (AI) By - SAI CHARITH PUTTABAKULA 
 This is my class Work for AI by Akshay Saini
 
+<h1 align="center">SEASON - 1 🔥</h1>
+
 # Episode 1 : The Evolution of AI
 
 > Notes summary from **Namaste AI Notes — Season 1, Episode 02: The Evolution of AI**.
