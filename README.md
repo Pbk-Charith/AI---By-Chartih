@@ -618,6 +618,8 @@ The final page of the PDF highlights these misconceptions:
 
 Machines represent language and other information using numerical vectors. Embeddings help models capture relationships between words and texts, while positional information and context help distinguish meanings. Similarity is useful for retrieval and comparison, but it does not establish truth or correctness.
 
+---
+
 # Episode 5 : The Computational Brain of Machines
 
 > Summary of the supplied Namaste AI Notes PDF: “The Computational Brain of Machines” (the source PDF labels it Season 1 — Episode 06).
@@ -753,5 +755,207 @@ The visualization is suggested as a way to follow the processing steps and inspe
 ## Main Takeaway
 
 An LLM generates text through repeated next-token prediction. Token embeddings and positional information enter Transformer layers, where attention builds context, normalization helps stabilize activations, residual connections preserve and update representations, and feed-forward networks transform each token. A final linear layer and Softmax produce scores and probabilities for possible next tokens.
+
+---
+
+# Episode 6: Sharpening the Brain
+
+> Summary of the supplied Namaste AI Notes PDF: “Sharpening the Brain” (the source PDF labels it Season 1 — Episode 07).
+
+## Overview
+
+This episode explains how neural networks learn during training. It covers model parameters, training data, forward passes, loss functions, backpropagation, gradients, gradient descent, optimization methods, self-supervised learning, training terminology, generalization, overfitting, and distributed training.
+
+## 1. Training vs. Inference
+
+The notes distinguish two stages:
+
+- **Training:** The model learns patterns by adjusting its parameters using training data and feedback from a loss function.
+- **Inference:** The trained model is used to produce predictions or responses for new inputs.
+
+Training repeatedly predicts and updates the model. Inference uses the learned parameters to generate an output. The notes emphasize that training typically consumes more computational resources and costs more than inference.
+
+## 2. What Does Learning Mean in a Neural Network?
+
+A neural network contains many adjustable numerical values called **parameters**. During training, these values are updated so that the model performs better on its objective.
+
+The PDF compares an untrained network to a newborn and a trained network to someone who has practiced a skill. An untrained or poorly trained model may make random or incorrect predictions.
+
+## 3. Parameters, Weights, and Biases
+
+**Parameters** are learned numerical values inside a model. They include:
+- **Weights:** Values that control the influence of inputs on calculations.
+- **Biases:** Adjustable offsets that help shift a neuron's activation.
+
+The notes compare parameters to knobs and dials that are adjusted as the model learns. Patterns and relationships from training are represented across these parameters; they are not stored as a human-like list of facts or memories.
+
+The PDF gives GPT-3 as an example with 175 billion parameters. It also makes a broad claim about later GPT models; model-specific parameter counts are not established by the notes here.
+
+## 4. Training Data
+
+**Training data** is the collection of examples used to train a model. The notes compare it to textbooks, flashcards, and practice problems. Parameters belong to the model, while training data supplies examples from which the model learns patterns.
+
+## 5. Forward Pass
+
+A **forward pass** is the process in which input data travels through the network to produce a prediction.
+
+The PDF uses the prompt `The sky is ____`:
+1. The input is converted into numerical representations.
+2. The representations pass through the network using its current parameters.
+3. The model produces scores or probabilities for possible next tokens.
+4. It may predict `blue` if the model has learned the relevant pattern.
+
+The notes illustrate an incorrectly trained model predicting `banana` instead of `blue`. This example motivates the need to measure prediction error.
+
+## 6. Loss Function
+
+A **loss function** assigns a numerical value to how far a prediction is from the target.
+
+- Correct or suitable prediction: lower loss.
+- Very wrong prediction: higher loss.
+
+Training aims to reduce the loss over many examples and updates. In the PDF's example, predicting `banana` when the target is `blue` should incur a higher loss than predicting `blue`.
+
+## 7. Backpropagation (Backward Pass)
+
+**Backpropagation** calculates how the loss changes with respect to the model's parameters. It propagates information about the error backward through the network and computes gradients.
+
+The notes' example:
+1. The model predicts `banana` for `The sky is ____`.
+2. The loss indicates that the prediction is wrong.
+3. Backpropagation calculates how parameters contributed to the error.
+4. An optimization algorithm uses the gradients to update the parameters.
+
+**Key distinction:** Backpropagation calculates gradients; it does not, by itself, perform the parameter update.
+
+## 8. Gradients and Gradient Descent
+
+A **gradient** indicates how changing a parameter affects the loss and the direction in which the loss increases most rapidly.
+
+**Gradient descent** is an optimization algorithm that updates parameters in the direction opposite to the gradient to reduce the loss. The notes compare it to walking down a foggy mountain by taking steps toward lower ground.
+
+The PDF identifies three core ideas:
+- Loss function: measures prediction error.
+- Gradient: provides the direction and sensitivity information.
+- Learning rate: controls the size of each update.
+
+Training repeats prediction, loss calculation, gradient calculation, and parameter updates over many examples.
+
+## 9. Types of Gradient Descent
+
+### Batch Gradient Descent
+Uses the entire dataset to calculate the update.
+- **Advantage:** A stable update based on all examples.
+- **Trade-off:** Can be slow and memory-intensive.
+
+### Stochastic Gradient Descent (SGD)
+Updates parameters using one example at a time.
+- **Advantage:** Frequent updates and low memory use per example.
+- **Trade-off:** Updates can be noisy and fluctuate.
+
+### Mini-Batch Gradient Descent
+Uses small groups of examples for each update.
+- **Advantage:** Balances computational efficiency with less noisy updates.
+- The PDF describes mini-batch training as common in modern AI training.
+
+## 10. Self-Supervised Learning
+
+**Self-supervised learning** uses patterns within raw data to create training signals, rather than requiring a human to label every example manually.
+
+The notes describe a language-model example: the model learns by predicting missing or upcoming text, such as the next word in a sentence. Repeating this task over large datasets helps the model learn statistical patterns and relationships in language.
+
+## 11. Important Training Terminology
+
+| Term | Meaning |
+|---|---|
+| Dataset | The collection of training examples |
+| Batch | A group of examples processed together |
+| Training step | One optimization update |
+| Epoch | One complete pass through the training dataset |
+| Forward pass | Computes a prediction from the input |
+| Loss | Numerical measure of prediction error |
+| Backpropagation | Calculates gradients of the loss |
+| Gradient | Sensitivity information used to guide parameter updates |
+| Learning rate | Controls the size of parameter updates |
+| Inference | Using a trained model to make predictions |
+
+A batch is not the same as an epoch: an epoch covers the full dataset, often through many batches and training steps.
+
+## 12. Generalization
+
+**Generalization** is a model's ability to perform well on examples it did not directly encounter during training.
+
+The notes use the sky example: a model should not merely memorize that the sky is blue on sunny days; it should be able to handle a new example where the sky is gray during a storm.
+
+Good training aims to learn patterns that remain useful beyond the exact examples in the training data.
+
+## 13. Overfitting
+
+**Overfitting** occurs when a model fits its training examples too closely but performs poorly on new data.
+
+The PDF illustrates this with a model trained only on sunny-sky examples. If it memorizes the rule that the sky is always blue, it may fail on a stormy scene.
+
+Overfitting is the opposite of the generalization goal: memorizing the training examples is not enough if the model cannot handle unseen cases.
+
+## 14. Distributed Training
+
+**Distributed training** divides the work of training a large model across multiple computers or accelerators. These machines work in parallel and exchange information needed for training.
+
+The notes explain that large training workloads require substantial computation and memory, making distributed systems and GPUs important for large-scale model training.
+
+## 15. Training Loop at a Glance
+
+```text
+Training examples
+       ↓
+   Forward pass
+       ↓
+    Prediction
+       ↓
+  Calculate loss
+       ↓
+  Backpropagation
+       ↓
+ Calculate gradients
+       ↓
+ Optimizer updates parameters
+       ↓
+ Repeat over batches and epochs
+```
+
+This loop is repeated across training data so that the model can reduce its loss and improve its predictions.
+
+## Quick Revision
+
+- **Parameters:** Learned weights and biases inside the model.
+- **Training data:** Examples used to learn patterns.
+- **Forward pass:** Produces a prediction.
+- **Loss function:** Measures how wrong the prediction is.
+- **Backpropagation:** Calculates gradients.
+- **Gradient descent:** Uses gradients to update parameters in order to reduce loss.
+- **Self-supervised learning:** Creates learning signals from the data itself.
+- **Epoch:** One pass through the full training dataset.
+- **Generalization:** Performing well on unseen examples.
+- **Overfitting:** Performing well on training data but poorly on new data.
+- **Distributed training:** Spreading training computation across multiple machines or accelerators.
+
+## Questions for Self-Review
+
+The source PDF ends with questions for further study:
+1. What are parameters?
+2. How do embeddings learn?
+3. How do parameters change?
+4. What happens during a forward pass?
+5. What exactly does backpropagation do?
+6. How does gradient descent work?
+7. How does an LLM learn from data?
+8. How does a model generalize?
+9. Why does overfitting happen?
+10. Does a machine really understand, or just predict?
+
+## Main Takeaway
+
+Training improves a neural network by repeatedly making predictions, measuring errors, calculating gradients through backpropagation, and updating parameters with an optimizer. Self-supervised learning enables models to learn from large amounts of unlabeled data. The goal is not simply to memorize training examples, but to generalize to new inputs.
+
 
 
