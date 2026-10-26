@@ -1349,9 +1349,187 @@ The source PDF ends with questions such as:
 Reasoning-oriented AI uses additional computation to work through complex tasks rather than immediately generating a response. Verifiable feedback can help improve performance on tasks with objectively checkable answers, while subjective tasks may need human evaluation. Reasoning models remain fallible: additional computation can help, but it does not guarantee truth or correctness.
 
 ---
+<div align="center">
 
+# Neural Network Learning Cycle
 
+### Forward Propagation · Loss Calculation · Backpropagation · Gradient Descent
 
+*A visual guide to how neural networks learn from prediction errors and update their parameters.*
 
+</div>
 
+---
 
+## 📌 Overview
+
+A neural network learns through a repeated training cycle: it makes a prediction, measures how far that prediction is from the correct answer, calculates gradients, and updates its parameters to reduce the loss.
+
+<div align="center">
+
+**Training Data** → **Forward Pass** → **Loss** → **Backpropagation** → **Optimizer Update** → **Repeat**
+
+</div>
+
+## 🔄 The Training Flowchart
+
+```mermaid
+flowchart TD
+    A["Sample Data<br/>Features (X) and Labels (y)"] --> B["Forward Pass<br/>Generate Prediction ŷ"]
+    B --> C["Calculate Loss<br/>Compare ŷ with y"]
+    C --> D["Backpropagation<br/>Calculate Gradients"]
+    D --> E["Optimizer: Gradient Descent<br/>Update Weights and Biases"]
+    E --> F["Updated Model"]
+    F --> G{"Continue Training?"}
+    G -- Yes --> A
+    G -- No --> H["Trained Model"]
+```
+
+## 1. 📥 Sample Data
+
+The model receives training examples containing **input features** and the correct output, also called the **label**.
+
+### Example: House-price prediction
+
+| Item | Value |
+|---|---:|
+| Area | 1,000 sq. ft. |
+| Bedrooms | 2 |
+| Actual house price (label, \(y\)) | ₹50 lakh |
+
+- **Features (\(X\))**: area and number of bedrooms.
+- **Label (\(y\))**: the actual house price, ₹50 lakh.
+
+The model uses the features to predict the price.
+
+## 2. ➡️ Forward Pass (Forward Propagation)
+
+The input moves through the network layer by layer. The network uses its current weights, biases, and activation functions to produce a prediction.
+
+**Example**
+
+- Actual price: ₹50 lakh
+- Model prediction: ₹40 lakh
+
+The prediction can be represented as:
+
+\[
+\hat{y}=f(X;W,b)
+\]
+
+Where:
+
+- \(X\) = input features
+- \(W\) = weights
+- \(b\) = biases
+- \(\hat{y}\) = predicted output
+
+> **Key point:** Forward propagation produces a prediction. It does not itself update the model's weights.
+
+## 3. 📉 Calculate Loss
+
+A **loss function** measures the difference between the model's prediction and the actual output.
+
+For this example:
+
+- Actual price = ₹50 lakh
+- Predicted price = ₹40 lakh
+- Difference = ₹10 lakh
+
+For a regression problem, we could use **Mean Squared Error (MSE)**. Using values in lakh rupees:
+
+\[
+L=(y-\hat{y})^2
+\]
+
+\[
+L=(50-40)^2=100
+\]
+
+A smaller loss generally means a better fit to the training example.
+
+> **Key point:** The loss measures how wrong a prediction is. It does not, by itself, determine how each weight should change.
+
+## 4. 🔁 Backpropagation
+
+**Backpropagation** calculates gradients of the loss with respect to the model's trainable parameters. It propagates the error signal backward through the network, from the output toward earlier layers.
+
+For example, the gradient of the loss with respect to a weight is:
+
+\[
+\frac{\partial L}{\partial W}
+\]
+
+This gradient indicates how the loss changes when that weight changes slightly. The calculation uses the chain rule of calculus.
+
+> **Key point:** Backpropagation calculates gradients. The optimizer uses those gradients to update the parameters.
+
+## 5. ⚙️ Optimizer — Gradient Descent
+
+**Gradient Descent** updates the model's weights in a direction intended to reduce the loss.
+
+A common update rule is:
+
+\[
+W_{\text{new}}=W_{\text{old}}-\eta\frac{\partial L}{\partial W}
+\]
+
+Where:
+
+- \(W_{\text{old}}\) = current weight
+- \(\eta\) = learning rate
+- \(\frac{\partial L}{\partial W}\) = gradient of the loss with respect to the weight
+
+The minus sign indicates movement opposite to the gradient, which locally points toward increasing loss.
+
+### Why the learning rate matters
+
+- **Too small:** Training may progress very slowly.
+- **Too large:** Training can become unstable or fail to converge.
+- **Appropriate:** Updates can make steady progress toward a lower loss.
+
+Other optimizers include **SGD with momentum, RMSProp, and Adam**.
+
+## 6. ✅ Updated Model
+
+After the optimizer updates the weights and biases, the model can make another prediction. The cycle repeats over batches of training data and multiple epochs.
+
+The aim is to learn patterns that generalize to new, unseen examples. A lower training loss does **not** guarantee better performance on unseen data, so evaluation on separate data is important.
+
+## 🧠 Quick Comparison
+
+| Stage | Main purpose |
+|---|---|
+| **Forward propagation** | Computes a prediction |
+| **Loss function** | Measures prediction error |
+| **Backpropagation** | Calculates gradients |
+| **Gradient Descent / optimizer** | Updates weights using gradients |
+| **Updated model** | Makes the next prediction with revised parameters |
+
+## 🔁 Remember the Sequence
+
+<div align="center">
+
+### Data → Prediction → Error → Gradients → Weight Updates → Improved Predictions
+
+</div>
+
+Training repeats this process many times. The flowchart represents the main steps of one training iteration; real training usually involves many batches and epochs, and can use optimizers beyond plain Gradient Descent.
+
+## 🎯 Quick Self-Test
+
+1. What is the difference between a feature and a label?
+2. Does forward propagation update the weights?
+3. What does a loss function measure?
+4. What does backpropagation calculate?
+5. Which component updates the weights?
+6. How can an excessively high learning rate affect training?
+7. Does lower training loss always mean better performance on unseen data?
+
+---
+
+<div align="center">
+
+**Core takeaway:** The model predicts, measures error, calculates gradients, and updates its parameters—then repeats.
+
+</div>
