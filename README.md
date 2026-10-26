@@ -1533,3 +1533,127 @@ Training repeats this process many times. The flowchart represents the main step
 **Core takeaway:** The model predicts, measures error, calculates gradients, and updates its parameters—then repeats.
 
 </div>
+
+---
+
+<div align="center">
+
+# Understanding Epochs in Machine Learning
+
+### Epoch · Batch · Iteration · Model Training
+
+*A concise guide to how training data is processed and how neural networks improve their predictions.*
+
+</div>
+
+---
+
+## 📌 What Is an Epoch?
+
+In Machine Learning and Deep Learning, an **epoch** is one complete pass through the entire training dataset during model training.
+
+For example, if a neural network is trained using **1,000 cat and dog images**, one epoch is completed after the model has processed all 1,000 images once.
+
+## 🐱🐶 Simple Example
+
+| Epoch | What happens? |
+|---|---|
+| **Epoch 1** | The model processes all 1,000 images once. |
+| **Epoch 2** | The model processes the full dataset again, generally using updated weights. |
+| **Epoch 10** | The model has completed 10 passes through the dataset. |
+
+The model learns through repeated training, adjusting its parameters as it processes examples.
+
+## 🔍 Epoch vs. Batch vs. Iteration
+
+These three terms describe different parts of the training process.
+
+| Term | Meaning | Example |
+|---|---|---|
+| **Epoch** | One complete pass through the training dataset | All 1,000 images processed |
+| **Batch** | A subset of the dataset processed together | 100 images |
+| **Iteration** | One training step, commonly one optimizer update using a batch | Process one batch and update weights |
+
+### Calculation example
+
+Suppose you have:
+
+- **Training samples:** 1,000
+- **Batch size:** 100
+- **Number of epochs:** 5
+
+**Batches per epoch**
+
+\[
+\frac{1000}{100}=10
+\]
+
+Assuming one optimizer update per batch, that gives **10 iterations per epoch**.
+
+**Total iterations for 5 epochs**
+
+\[
+10 \times 5 = 50
+\]
+
+So, under these assumptions, training for 5 epochs involves **50 iterations**.
+
+> **Note:** If the dataset size is not evenly divisible by the batch size, the number of batches depends on whether the final partial batch is kept or dropped.
+
+## ⚙️ How Does an Epoch Help a Model Learn?
+
+A typical training loop follows these steps:
+
+```mermaid
+flowchart TD
+    A["Training Batch"] --> B["Forward Propagation<br/>Make a Prediction"]
+    B --> C["Calculate Loss<br/>Measure Error"]
+    C --> D["Backpropagation<br/>Calculate Gradients"]
+    D --> E["Optimizer<br/>Update Weights"]
+    E --> F{"More batches in this epoch?"}
+    F -- Yes --> A
+    F -- No --> G["Epoch Complete"]
+    G --> H{"More epochs to train?"}
+    H -- Yes --> A
+    H -- No --> I["Finish Training"]
+```
+
+1. **Forward propagation:** The model makes predictions from the input data.
+2. **Loss calculation:** A loss function measures the difference between predictions and the correct answers.
+3. **Backpropagation:** The model calculates gradients that indicate how the parameters affect the loss.
+4. **Optimizer update:** The optimizer uses those gradients to update the weights and biases.
+5. **Repeat:** The process continues across batches until the training dataset has been processed, completing one epoch.
+
+Training can then continue for additional epochs.
+
+## 📈 Does More Epochs Mean a Better Model?
+
+Not always. The number of epochs affects how long the model trains, but additional training does not guarantee better performance.
+
+- **Too few epochs — underfitting:** The model may not learn the patterns in the data sufficiently.
+- **Too many epochs — possible overfitting:** The model may fit the training examples too closely and perform poorly on unseen data.
+
+Use validation data to monitor performance and help decide when to stop training.
+
+## 🧠 Quick Revision
+
+- **Epoch:** One complete pass through the entire training dataset.
+- **Batch:** A subset of training examples processed together.
+- **Iteration:** One training step, commonly one parameter update.
+- **Batch size:** The number of examples in a batch.
+- **Underfitting:** The model has not learned the training patterns sufficiently.
+- **Overfitting:** The model fits training data too closely and generalizes poorly.
+
+### Interview-Ready Definition
+
+> An epoch is one complete pass of the entire training dataset through a machine learning model during training.
+
+---
+
+<div align="center">
+
+**Remember:** Epoch = one full pass · Batch = a subset · Iteration = one training step
+
+</div>
+
+---
