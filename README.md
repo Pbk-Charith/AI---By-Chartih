@@ -1657,3 +1657,199 @@ Use validation data to monitor performance and help decide when to stop training
 </div>
 
 ---
+<div align="center">
+
+# Sharpening the Brain
+### Neural Network Training, Learning & Generalization
+
+</div>
+
+---
+
+## 📌 Overview
+
+This episode explains how neural networks learn from training data. A model makes predictions, measures its errors with a loss function, calculates gradients through backpropagation, and updates its parameters using an optimization algorithm.
+
+It also introduces self-supervised learning, epochs and batches, the difference between training and inference, **generalization**, overfitting, and distributed training.
+
+## 🧠 1. What Does Learning Mean in a Neural Network?
+
+A neural network learns by adjusting its internal numerical values—called **parameters**—to improve predictions for a particular objective.
+
+The notes compare parameters to adjustable knobs: at the start, their values may produce poor predictions; during training, the model updates them based on errors.
+
+### Parameters: weights and biases
+
+- **Weights** determine how strongly inputs influence calculations.
+- **Biases** provide adjustable offsets in those calculations.
+- Together, these learned values influence the model's output.
+
+Parameters encode patterns and relationships learned from training data. They are not a human-like database of facts or memories.
+
+## 📚 2. Training Data
+
+**Training data** is the collection of examples used to train a model. The notes compare it to textbooks and practice problems.
+
+The model uses these examples to learn patterns that can help it make predictions on later inputs.
+
+## ➡️ 3. Forward Pass
+
+A **forward pass** is the process in which input data travels through a neural network to produce a prediction.
+
+The episode uses the prompt:
+
+> “The sky is ____”
+
+The model processes the input and predicts a likely next word. If it assigns a high probability to “banana” instead of a sensible completion such as “blue,” it may not have learned the relevant pattern well.
+
+## 📉 4. Loss Function
+
+A **loss function** measures how far a prediction is from the target answer.
+
+- A prediction that matches the target typically receives a lower loss.
+- A poor prediction typically receives a higher loss.
+
+Training aims to reduce the loss across examples. The loss provides a numerical measure of prediction error, but parameter updates require gradient calculations and an optimizer.
+
+## 🔁 5. Backpropagation
+
+**Backpropagation** calculates how the loss changes with respect to the model's parameters. It propagates gradient information backward through the network using the chain rule.
+
+This tells the optimizer how the weights and biases affect the loss.
+
+> **Remember:** Backpropagation calculates gradients; the optimizer uses those gradients to update parameters.
+
+## ⚙️ 6. Gradient Descent and Optimization
+
+**Gradient Descent** is an iterative optimization algorithm that updates parameters in the direction intended to reduce the loss.
+
+The notes compare it to walking down a foggy mountain: use the slope to choose a downward step, then repeat.
+
+Its key components are:
+
+- **Loss function:** Measures prediction error.
+- **Gradient:** Indicates how the loss changes as parameters change.
+- **Learning rate:** Controls the size of each update.
+
+### Types of Gradient Descent
+
+| Method | How it works | Trade-off described in the notes |
+|---|---|---|
+| **Batch Gradient Descent** | Uses the entire dataset for an update | Stable, but can be slow and memory-intensive |
+| **Stochastic Gradient Descent (SGD)** | Updates using one example at a time | Frequent, low-memory updates, but can be noisy |
+| **Mini-Batch Gradient Descent** | Updates using small groups of examples | Balances efficiency and update stability; widely used in modern training |
+
+## 🔄 7. The Training Loop
+
+The main learning cycle is:
+
+```mermaid
+flowchart TD
+    A["Training Data / Batch"] --> B["Forward Pass<br/>Make Prediction"]
+    B --> C["Loss Function<br/>Measure Error"]
+    C --> D["Backpropagation<br/>Calculate Gradients"]
+    D --> E["Optimizer / Gradient Descent<br/>Update Parameters"]
+    E --> F{"More batches?"}
+    F -- Yes --> A
+    F -- No --> G["Epoch Complete"]
+    G --> H["Repeat for more epochs as needed"]
+```
+
+This process repeats across training batches and epochs so the model can improve its predictions.
+
+## 🌱 8. Self-Supervised Learning
+
+**Self-supervised learning** uses patterns within raw data to create learning signals, without requiring a human to label every example.
+
+For example, a language model can learn by predicting a missing or upcoming part of a sentence. Repeating this task over large amounts of text helps it learn statistical patterns in language.
+
+## 📖 9. Dataset, Batch, Step, and Epoch
+
+| Term | Meaning |
+|---|---|
+| **Dataset** | The collection of training examples |
+| **Batch** | A group of examples processed together |
+| **Training step / iteration** | One optimization update |
+| **Epoch** | One complete pass through the training dataset |
+
+An epoch is not the same as a batch: one epoch generally contains multiple batches.
+
+## 🔄 10. Training vs. Inference
+
+| Training | Inference |
+|---|---|
+| The model learns from examples and updates its parameters. | The trained model uses its learned parameters to produce predictions for input data. |
+| Involves loss calculation, gradients, and optimization. | Usually runs the forward computation to produce outputs. |
+| Can require substantial computation and cost. | Typically does not update model parameters during ordinary prediction. |
+
+The notes emphasize that training usually consumes more computational power and costs more than inference.
+
+## 🎯 11. What Is Generalization?
+
+**Generalization** is a model's ability to perform well on examples it did not directly memorize or encounter during training.
+
+A model should learn useful patterns rather than simply repeat its training examples.
+
+### Example: Understanding the sky
+
+Imagine a model is trained on images of sunny days and learns to associate the sky with blue. If it later sees an unseen image of a stormy day and correctly predicts that the sky is gray, it has applied a learned concept to a new situation.
+
+Good generalization means learning patterns that remain useful beyond the exact training examples.
+
+## ⚠️ 12. Overfitting
+
+**Overfitting** occurs when a model performs very well on training data but poorly on new, unseen examples.
+
+For example, if a model only memorizes that the sky is blue in its sunny-day training images, it may incorrectly predict blue for a stormy night.
+
+| Generalization | Overfitting |
+|---|---|
+| Learns patterns that remain useful for unseen data. | Fits training examples too closely and struggles with new data. |
+| Supports useful predictions beyond the training set. | Often reflects memorization rather than robust pattern learning. |
+
+The goal is not simply to minimize training error, but to build a model that also performs well on unseen data.
+
+## 🖥️ 13. Distributed Training
+
+**Distributed training** splits the work of training a large model across multiple computers or accelerators. These devices work in parallel and exchange information needed for training.
+
+The notes explain that very large datasets and models may exceed the time or memory capacity of a single machine. Distributed systems help scale the workload.
+
+## 📝 Quick Revision
+
+- **Parameters:** Learned numerical values, including weights and biases.
+- **Training data:** Examples used to teach the model patterns.
+- **Forward pass:** Produces a prediction.
+- **Loss function:** Measures prediction error.
+- **Backpropagation:** Calculates gradients of the loss.
+- **Gradient Descent:** Uses gradients to update parameters.
+- **Self-supervised learning:** Learns from signals derived from the data itself.
+- **Epoch:** One full pass through the training dataset.
+- **Inference:** Uses a trained model to make predictions.
+- **Generalization:** Performs well on unseen examples.
+- **Overfitting:** Performs well on training data but poorly on new data.
+- **Distributed training:** Shares training computation across multiple machines or accelerators.
+
+## 🎓 Questions for Self-Review
+
+1. What are neural-network parameters?
+2. How do embeddings learn?
+3. How do parameters change during training?
+4. What happens during a forward pass?
+5. What does backpropagation calculate?
+6. How does Gradient Descent work?
+7. How does an LLM learn from data?
+8. What is the difference between training and inference?
+9. What is an epoch, and how does it differ from a batch?
+10. What is generalization?
+11. Why does overfitting happen?
+12. Does a machine really understand, or does it predict?
+
+---
+
+<div align="center">
+
+**Core takeaway:** Training repeatedly predicts, measures error, calculates gradients, and updates parameters. The goal is to learn patterns that generalize—not merely memorize training examples.
+
+</div>
+---
