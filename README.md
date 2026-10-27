@@ -2066,8 +2066,13 @@ The notes explain that very large datasets and models may exceed the time or mem
 **Core takeaway:** Training repeatedly predicts, measures error, calculates gradients, and updates parameters. The goal is to learn patterns that generalize—not merely memorize training examples.
 
 </div>
----
-# 🌐 What Is Common Crawl?
+
+<div align="center">
+
+### COMMON CRAWL
+
+</div>
+🌐 What Is Common Crawl?
 
 **Common Crawl** is a free, open repository of web-crawled data collected from websites across the internet. Researchers, developers, and AI engineers use this data to study web content, build datasets, and develop machine learning applications.
 
