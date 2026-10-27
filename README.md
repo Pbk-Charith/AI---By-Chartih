@@ -2180,5 +2180,372 @@ Common Crawl has contributed to datasets such as **C4, OSCAR, and RefinedWeb**, 
 
 Understanding Common Crawl helps explain how large-scale web data can become a valuable resource for modern AI and language model development.
 ---
+# 🧠 What Data from Common Crawl Is Fed into Neural Networks, and How?
+
+Developers do not normally feed the entire Common Crawl archive directly into a neural network. They first extract useful content, clean and filter it, convert the text into numerical token IDs, and organize those IDs into batches for model training.
+
+For a Large Language Model (LLM), the primary training input is typically **sequences of token IDs representing text collected from websites**.
+
+---
+
+## 📌 1. What Data Does Common Crawl Provide?
+
+Common Crawl provides web-crawled data in different formats. Developers choose the format according to their requirements.
+
+| Data Format | What It Contains | Typical Use |
+|---|---|---|
+| **WARC** | Raw webpage responses, including HTML and HTTP information | Extracting and processing webpage content |
+| **WET** | Plain text extracted from crawled webpages | Text analysis and NLP dataset preparation |
+| **WAT** | Metadata extracted from webpages, including headers and links | Filtering, metadata analysis, and link analysis |
+
+### Example of the Data
+
+Suppose Common Crawl captures a webpage containing the following article:
+
+> Artificial intelligence enables computers to learn patterns from data and make predictions.
+
+The raw webpage may contain HTML tags, navigation menus, advertisements, and other information in addition to the main article.
+
+For language-model pretraining, developers generally want the meaningful text rather than all the webpage's HTML and interface elements.
+
+**Important:** WET already contains extracted plain text, while WARC provides the raw crawl response that developers can process themselves. Neither format guarantees that every extracted document is high quality.
+
+Official resource: [Common Crawl — Get Started](https://commoncrawl.org/get-started)
+
+---
+
+## 🔄 2. How Does Common Crawl Data Reach a Neural Network?
+
+A typical text-based LLM training pipeline works as follows:
+
+```text
+        🌐 Websites Across the Internet
+                    |
+                    v
+        🗄️ Common Crawl Archive
+             WARC / WET / WAT
+                    |
+                    v
+         ⚙️ Data Extraction
+       Extract useful webpage text
+                    |
+                    v
+          🧹 Data Cleaning
+    Filter low-quality and duplicate text
+       Apply appropriate data policies
+                    |
+                    v
+             🔤 Tokenization
+        Convert text into token IDs
+                    |
+                    v
+           🔢 Training Batches
+      Arrange token IDs into tensors
+                    |
+                    v
+          🧠 Neural Network
+        Embeddings + Transformer
+                    |
+                    v
+       🎯 Next-Token Prediction
+                    |
+                    v
+            📉 Loss Calculation
+                    |
+                    v
+          🔁 Backpropagation
+           Update model weights
+```
+
+Each step prepares the data for the next stage.
+
+---
+
+## 🧹 3. Step One: Extract and Clean the Text
+
+Before training, developers create a dataset containing useful, readable content.
+
+Common preprocessing operations include:
+
+- **Text extraction:** Remove HTML markup and extract the main webpage content.
+- **Quality filtering:** Remove spam, malformed documents, and low-quality content.
+- **Deduplication:** Identify and remove duplicate or near-duplicate documents.
+- **Language identification:** Select documents written in the desired language or languages.
+- **Privacy filtering:** Detect and handle personal information appropriately.
+- **Data governance:** Review applicable licenses, usage restrictions, source requirements, and other relevant policies.
+
+For example, a webpage might originally contain:
+
+```html
+<h1>Artificial Intelligence</h1>
+<p>AI enables computers to learn from data.</p>
+<nav>Home | About | Contact</nav>
+```
+
+After extraction and cleaning, the selected training text might be:
+
+```text
+Artificial Intelligence
+
+AI enables computers to learn from data.
+```
+
+The exact extraction and filtering rules depend on the dataset and the model being developed.
+
+---
+
+## 🔤 4. Step Two: Convert Text into Tokens
+
+Neural networks do not directly process human-readable sentences as their standard numerical inputs. A tokenizer converts text into smaller units called **tokens**.
+
+Consider this example:
+
+```text
+Artificial intelligence learns from data.
+```
+
+A tokenizer might split the sentence into tokens resembling:
+
+```text
+["Artificial", " intelligence", " learns", " from", " data", "."]
+```
+
+The precise tokenization depends on the tokenizer being used.
+
+### Convert Tokens into Numerical IDs
+
+Each token is assigned an integer from the tokenizer's vocabulary.
+
+The following IDs are illustrative only:
+
+| Token | Example Token ID |
+|---|---:|
+| `Artificial` | 1042 |
+| ` intelligence` | 583 |
+| ` learns` | 927 |
+| ` from` | 316 |
+| ` data` | 781 |
+| `.` | 19 |
+
+The text is now represented as a sequence of numbers:
+
+```text
+[1042, 583, 927, 316, 781, 19]
+```
+
+These numbers are called **token IDs**.
+
+A real tokenizer may produce different tokens and IDs. The example above is not an actual tokenizer output.
+
+Learn more: [Hugging Face Tokenizers Documentation](https://huggingface.co/docs/tokenizers)
+
+---
+
+## 💻 5. Step Three: Load Common Crawl-Based Data Using Hugging Face
+
+Developers do not always need to process raw Common Crawl files themselves. They can use an already processed dataset, such as **FineWeb**, which was created by filtering and deduplicating Common Crawl content for language-model pretraining.
+
+Dataset: [FineWeb on Hugging Face](https://huggingface.co/datasets/HuggingFaceFW/fineweb)
+
+### Install the Required Libraries
+
+```bash
+pip install datasets transformers
+```
+
+### Load a Small Selection of FineWeb Data
+
+```python
+from datasets import load_dataset
+
+dataset = load_dataset(
+    "HuggingFaceFW/fineweb",
+    name="sample-10BT",
+    split="train",
+    streaming=True
+)
+
+# Read one example without downloading the entire dataset
+example = next(iter(dataset))
+
+print(example["text"][:500])
+```
+
+**How this works:**
+
+1. `load_dataset()` accesses the FineWeb dataset on Hugging Face.
+2. `name="sample-10BT"` selects a smaller sample configuration.
+3. `split="train"` selects the training split.
+4. `streaming=True` allows examples to be read incrementally instead of downloading the whole dataset first.
+5. `example["text"]` retrieves the text from one dataset record.
+
+The sample represents approximately 10 billion GPT-2 tokens across the full sample, so it is still a large dataset. Streaming helps you inspect only the records you need.
+
+For dataset-loading documentation, see [Hugging Face Datasets](https://huggingface.co/docs/datasets).
+
+---
+
+## 🔢 6. Step Four: Tokenize the Text for Model Input
+
+Once a text example has been loaded, a tokenizer can convert it into token IDs.
+
+```python
+from transformers import AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+
+text = example["text"][:1000]
+
+inputs = tokenizer(
+    text,
+    return_tensors="pt",
+    truncation=True,
+    max_length=512
+)
+
+print(inputs["input_ids"])
+```
+
+### What Happens Here?
+
+- `AutoTokenizer.from_pretrained("gpt2")` loads the GPT-2 tokenizer.
+- `text` contains a portion of the extracted webpage content.
+- `return_tensors="pt"` returns the encoded inputs as PyTorch tensors.
+- `truncation=True` limits overly long sequences.
+- `max_length=512` limits this example to at most 512 tokens.
+
+The output is a numerical tensor containing the token IDs.
+
+Conceptually:
+
+```text
+Webpage text
+     |
+     v
+Tokenizer
+     |
+     v
+Token IDs
+     |
+     v
+PyTorch Tensor
+     |
+     v
+Neural Network Input
+```
+
+**Important:** This example demonstrates text loading and tokenization. It does not train the model by itself. In a complete training pipeline, token sequences are batched and passed to a compatible model, with training targets and optimization configured appropriately.
+
+---
+
+## 🧠 7. Step Five: How Does the Neural Network Learn?
+
+During causal language-model pretraining, a model learns to predict the next token based on the preceding tokens.
+
+For example, consider this sentence:
+
+```text
+Artificial intelligence learns from data.
+```
+
+The training task can be illustrated like this:
+
+| Context Available to the Model | Target Next Token |
+|---|---|
+| `Artificial` | `intelligence` |
+| `Artificial intelligence` | `learns` |
+| `Artificial intelligence learns` | `from` |
+| `Artificial intelligence learns from` | `data` |
+
+This table illustrates the learning objective. In actual training, multiple token positions are processed in parallel, and model implementations usually handle the appropriate shifting of prediction targets.
+
+### The Training Process
+
+1. **Input:** The model receives a batch of token IDs.
+2. **Embeddings:** The IDs are mapped to learned vectors representing tokens.
+3. **Transformer layers:** The model processes the vectors and contextual information.
+4. **Prediction:** The model produces scores or probabilities for possible next tokens.
+5. **Loss calculation:** Its predictions are compared with the expected targets.
+6. **Backpropagation:** Gradients are calculated to determine how the parameters contributed to the loss.
+7. **Weight updates:** An optimizer updates the model's parameters to improve future predictions.
+
+This process repeats across many batches and training steps.
+
+Learn more: [Hugging Face — Causal Language Modeling](https://huggingface.co/docs/transformers/tasks/language_modeling)
+
+---
+
+## 📦 8. Does Every Common Crawl Field Enter the Neural Network?
+
+No. Different fields serve different purposes.
+
+| Data | Typical Treatment |
+|---|---|
+| Main webpage text | Commonly used for text-model training after processing |
+| HTML tags and navigation menus | Usually removed or selectively processed |
+| URLs and crawl dates | Often used for filtering, tracking, and provenance |
+| Language labels | Used to select or organize training examples |
+| Hyperlinks | Useful for web analysis and certain specialized tasks |
+| Code snippets | May be retained for code-focused training |
+| Images, audio, or video | Require suitable processing for multimodal tasks |
+
+For a standard text-only language model, the main input is typically tokenized text. Metadata is often used to decide which text to keep, rather than being directly fed into the model.
+
+---
+
+## 🔑 9. Important Concepts to Remember
+
+| Concept | Explanation |
+|---|---|
+| Common Crawl | An archive of web-crawled data |
+| WARC | Stores raw crawl responses and related records |
+| WET | Stores extracted plain text |
+| WAT | Stores extracted webpage metadata |
+| Data Cleaning | Removes unwanted or poor-quality content |
+| Tokenization | Converts text into tokens and numerical IDs |
+| Embeddings | Maps token IDs to learned vector representations |
+| Neural Network | Processes the numerical input and learns patterns |
+| Loss Function | Measures prediction error during training |
+| Backpropagation | Calculates gradients used to improve model parameters |
+| Optimizer | Updates model parameters using the gradients |
+
+---
+
+## 🔗 10. Important Links and Learning Resources
+
+### Common Crawl
+
+- [Common Crawl Official Website](https://commoncrawl.org/)
+- [Common Crawl Overview](https://www.commoncrawl.org/overview)
+- [Common Crawl — Get Started](https://commoncrawl.org/get-started)
+- [Common Crawl Data Repository](https://data.commoncrawl.org/)
+
+### Hugging Face
+
+- [Hugging Face Hub](https://huggingface.co/) — Explore models and datasets.
+- [FineWeb Dataset](https://huggingface.co/datasets/HuggingFaceFW/fineweb) — A cleaned and deduplicated English web-text dataset derived from Common Crawl.
+- [FineWeb2 Dataset](https://huggingface.co/datasets/HuggingFaceFW/fineweb-2) — A multilingual Common Crawl-derived dataset.
+- [Hugging Face Datasets Documentation](https://huggingface.co/docs/datasets) — Load, stream, and process datasets.
+- [Hugging Face Tokenizers Documentation](https://huggingface.co/docs/tokenizers) — Learn how text becomes token IDs.
+- [Hugging Face Transformers Documentation](https://huggingface.co/docs/transformers) — Work with Transformer models.
+- [Causal Language Modeling Guide](https://huggingface.co/docs/transformers/tasks/language_modeling) — Learn how models train to predict subsequent tokens.
+
+### Data Processing Tools
+
+- [DataTrove on GitHub](https://github.com/huggingface/datatrove) — Tools for processing large-scale text datasets.
+- [PyTorch Documentation](https://pytorch.org/docs/stable/index.html) — Learn tensor operations and neural-network training.
+
+---
+
+## ✅ Final Takeaway
+
+The complete pipeline can be summarized as:
+
+**Common Crawl → Text Extraction → Data Cleaning → Tokenization → Numerical Tensors → Neural Network → Loss Calculation → Backpropagation → Updated Weights**
+
+Common Crawl provides the source material. Developers process that material into suitable training examples, and the neural network learns statistical patterns from their numerical representations.
+
+
+---
 
 [⬆️ Back to Table of Contents](#-table-of-contents)
