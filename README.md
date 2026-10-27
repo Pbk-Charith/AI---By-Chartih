@@ -200,6 +200,7 @@ This is my class Work for AI by Akshay Saini
   - [🖥️ 13. Distributed Training](#-13-distributed-training)
   - [📝 Quick Revision](#-quick-revision-1)
   - [🎓 Questions for Self-Review](#-questions-for-self-review)
+    - [COMMON CRAWL](#common-crawl-1)
   - [📌 1. How Does Common Crawl Work?](#-1-how-does-common-crawl-work)
     - [🔄 Workflow](#-workflow)
   - [🧠 2. Why Is Common Crawl Important in AI?](#-2-why-is-common-crawl-important-in-ai)
