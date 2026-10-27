@@ -1,6 +1,14 @@
 # Artificial Intelligence (AI) By - SAI CHARITH PUTTABAKULA 
 This is my class Work for AI by Akshay Saini
 
+---
+## 📚 Table of Contents
+
+<!-- START doctoc -->
+<!-- END doctoc -->
+
+---
+
 <h1 align="center">SEASON - 1 🔥</h1>
 
 # Episode 1 : The Evolution of AI
