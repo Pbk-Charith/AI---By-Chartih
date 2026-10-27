@@ -200,6 +200,16 @@ This is my class Work for AI by Akshay Saini
   - [🖥️ 13. Distributed Training](#-13-distributed-training)
   - [📝 Quick Revision](#-quick-revision-1)
   - [🎓 Questions for Self-Review](#-questions-for-self-review)
+  - [📌 1. How Does Common Crawl Work?](#-1-how-does-common-crawl-work)
+    - [🔄 Workflow](#-workflow)
+  - [🧠 2. Why Is Common Crawl Important in AI?](#-2-why-is-common-crawl-important-in-ai)
+    - [Example: Preparing Data for AI Training](#example-preparing-data-for-ai-training)
+  - [⚖️ 3. Common Crawl vs. Google Search](#-3-common-crawl-vs-google-search)
+  - [🚀 4. Common Use Cases](#-4-common-use-cases)
+  - [🔑 5. Important Concepts to Remember](#-5-important-concepts-to-remember)
+  - [📚 6. Official Resources](#-6-official-resources)
+  - [✅ Key Takeaway](#-key-takeaway)
+  - [Understanding Common Crawl helps explain how large-scale web data can become a valuable resource for modern AI and language model development.](#understanding-common-crawl-helps-explain-how-large-scale-web-data-can-become-a-valuable-resource-for-modern-ai-and-language-model-development)
 
 <!-- END doctoc -->
 
