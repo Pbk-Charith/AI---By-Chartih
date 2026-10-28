@@ -2861,5 +2861,385 @@ This section is an informational summary, not legal advice.
 8. Always review current documentation, limitations, and licensing before using the dataset.
 
 ---
+# 🧠 From a Base Model to an AI Assistant
+
+A practical guide to how large language models (LLMs) are built: **pre-training → post-training → deployment and inference**. These notes expand the lifecycle diagram with each major step, what goes into it, what happens, and what comes out.
+
+> **Big picture:** Pre-training teaches a model broad patterns from large datasets. Post-training shapes the model to follow instructions and respond more helpfully and safely. Deployment lets people use the trained model to generate responses.
+
+## 🖼️ Pictorial Notes: The Full Lifecycle
+
+![From Base Model to AI Assistant — pre-training, post-training, and deployment/inference](assets/base-model-to-ai-assistant.png)
+
+*The diagram is a visual overview. Not every model uses every technique shown; real pipelines differ by model, data, goals, and compute budget.*
+
+---
+- [1. The Three Main Stages](#1-the-three-main-stages)
+- [2. Stage One — Pre-training](#2-stage-one--pre-training)
+- [3. Stage Two — The Pre-training Learning Loop](#3-stage-two--the-pre-training-learning-loop)
+- [4. What Is a Base Model?](#4-what-is-a-base-model)
+- [5. Stage Three — Post-training](#5-stage-three--post-training)
+- [6. Stage Four — Deployment and Inference](#6-stage-four--deployment-and-inference)
+- [7. How the Stages Differ](#7-how-the-stages-differ)
+- [8. A Complete Example](#8-a-complete-example)
+- [9. Important Terms](#9-important-terms)
+- [10. Useful Links](#10-useful-links)
+
+---
+
+## 1. The Three Main Stages
+
+| Stage | Main goal | Typical input | Typical output |
+|---|---|---|---|
+| **Pre-training** | Learn general language patterns and broad knowledge | Large, carefully prepared text or multimodal datasets | A **base model** |
+| **Post-training** | Teach the model to follow instructions and improve helpfulness, behavior, and safety | Instruction-response examples, preference data, and evaluation tasks | An **instruction-tuned / assistant model** |
+| **Deployment / inference** | Use the trained model to answer a user's request | User prompt, system instructions, and optionally retrieved information or tool results | A generated response |
+
+**Terminology note:** “Training” can refer broadly to any process that updates model parameters. In these notes, *pre-training* and *post-training* are the two training stages, while *deployment/inference* is the use of a trained model without normally updating its weights for each request.
+
+---
+
+## 2. Stage One — Pre-training
+
+**Goal:** Teach a model general patterns in language and other training data before specializing it for assistant-style conversations.
+
+### Step 1 — Collect data
+
+Data sources may include permitted web pages, books, documentation, code, and other datasets selected for the project. A web archive such as [Common Crawl](https://commoncrawl.org/) can be one source of web data.
+
+The amount and type of data depend on the model. Developers should consider data rights, source restrictions, privacy, and quality when building a dataset.
+
+### Step 2 — Refine and clean the data
+
+Raw web pages can contain navigation menus, advertisements, malformed markup, repeated pages, spam, and unrelated text. Data preparation may include:
+
+- Extracting readable text from HTML or other source formats.
+- Removing exact and near-duplicate documents.
+- Filtering low-quality, irrelevant, or machine-generated spam where appropriate.
+- Identifying language and applying quality filters.
+- Handling personal information and applying relevant safety, privacy, and data-use policies.
+- Maintaining useful source and provenance metadata where needed.
+
+Cleaning improves the quality of the training corpus, but no filtering pipeline is perfect.
+
+### Step 3 — Tokenize the data
+
+A **tokenizer** converts text into tokens and then into numerical token IDs understood by the model's vocabulary. A token may be a word, part of a word, punctuation mark, or another text unit.
+
+Example sentence:
+
+```text
+The cat sat on the mat.
+```
+
+Illustrative tokenization:
+
+```text
+["The", " cat", " sat", " on", " the", " mat", "."]
+```
+
+The tokenizer maps those tokens to integer IDs. The exact tokens and IDs depend on the tokenizer; the example is conceptual, not a real vocabulary mapping.
+
+### Step 4 — Build training sequences and batches
+
+Token IDs are grouped into sequences that fit the model's context length, then assembled into batches. Training systems convert these sequences into numerical tensors. They may also create masks and target labels required by the model's training objective.
+
+### Step 5 — Prepare model inputs
+
+For a Transformer language model, token IDs are mapped to **embeddings**—vectors of numbers. The model also receives information about token order, using positional embeddings or another positional-information mechanism depending on its architecture.
+
+The resulting representations are processed by the network's layers.
+
+---
+
+## 3. Stage Two — The Pre-training Learning Loop
+
+This is the repeated optimization process that teaches the base model from the prepared dataset.
+
+### Step 6 — Process tokens with a Transformer
+
+A typical decoder-only language model contains repeated Transformer blocks. Each block commonly includes:
+
+1. **Self-attention:** Lets a token representation use relevant information from earlier tokens in its context. In a causal language model, attention is masked so a position cannot use future tokens to predict its target.
+2. **Feed-forward network:** Further transforms the token representations.
+3. **Residual connections and normalization:** Help information and gradients move through deep networks; exact details vary by architecture.
+
+The model produces scores (logits) for possible next tokens at each prediction position.
+
+### Step 7 — Predict the next token
+
+A common objective for a causal language model is **next-token prediction**. The model uses the preceding context to predict the next token.
+
+Illustrative training example:
+
+| Context given to the model | Expected next token |
+|---|---|
+| `The` | `cat` |
+| `The cat` | `sat` |
+| `The cat sat` | `on` |
+| `The cat sat on the` | `mat` |
+
+Actual training processes many positions and sequences in batches; the table is a simplified illustration.
+
+### Step 8 — Calculate the loss
+
+The training code compares the model's predictions with the expected target tokens using a loss function, commonly cross-entropy for next-token prediction. A larger loss generally means the predictions assigned lower probability to the expected tokens.
+
+### Step 9 — Backpropagate and update weights
+
+- **Backpropagation** calculates gradients showing how the model parameters contributed to the loss.
+- An **optimizer** such as AdamW uses those gradients to update the model's parameters.
+- The model repeats this process across many batches and training steps.
+
+```text
+Token batch
+   ↓
+Model prediction
+   ↓
+Calculate loss against target tokens
+   ↓
+Backpropagation calculates gradients
+   ↓
+Optimizer updates model weights
+   ↓
+Next batch and repeat
+```
+
+Training is computationally expensive. Large-scale runs may use multiple GPUs or accelerators, distributed training, checkpoints, validation sets, and careful monitoring.
+
+### Step 10 — Evaluate and save checkpoints
+
+Teams monitor training and evaluate checkpoints on held-out data and relevant benchmarks. They may adjust training settings, investigate data or performance problems, and select a suitable checkpoint.
+
+**Output of pre-training:** A **base model** that has learned general statistical patterns from its training data. A base model can continue text, but it may not reliably follow user instructions or behave like a polished assistant.
+
+---
+
+## 4. What Is a Base Model?
+
+A base model is the model produced by pre-training before assistant-oriented post-training. It has learned language patterns and may encode factual associations and some useful capabilities, but its behavior is not necessarily optimized for direct conversation.
+
+For example, after a prompt such as:
+
+```text
+Explain gravity in simple words.
+```
+
+a base model may continue the text in a way that resembles patterns from its training corpus. It is not guaranteed to format the response as a clear answer to the request.
+
+The next stage helps turn those raw capabilities into more useful assistant behavior.
+
+---
+
+## 5. Stage Three — Post-training
+
+**Goal:** Adapt the base model so it responds to instructions, follows the intended format, and better meets quality and safety expectations.
+
+Post-training is not one fixed recipe. Different teams use different combinations of supervised fine-tuning, preference optimization, reinforcement learning, and evaluation.
+
+### Step 11 — Prepare instruction-response examples
+
+Create examples of prompts and desirable responses. For example:
+
+```text
+User: Explain gravity in simple words.
+Assistant: Gravity is a force that attracts objects toward one another.
+```
+
+The examples should reflect the tasks, tone, formats, and behaviors the model is expected to handle.
+
+### Step 12 — Supervised fine-tuning (SFT)
+
+In SFT, the model is trained on example conversations or instruction-response pairs. The model learns to produce the target assistant response given the prompt and context.
+
+SFT can improve instruction following and response format. It does not automatically guarantee that every answer is correct or safe.
+
+### Step 13 — Collect preference data (when used)
+
+People or other evaluation systems may compare alternative responses to the same prompt. A preference record might identify one response as better because it is clearer, more accurate, more useful, or safer.
+
+```text
+Prompt: Explain gravity simply.
+
+Answer A: A clear, accurate explanation.   ← Preferred
+Answer B: A confusing or inaccurate answer.
+```
+
+Preference datasets need clear criteria and quality checks. Human preferences can be inconsistent, so preference data also requires careful handling.
+
+### Step 14 — Optimize responses using preferences (when used)
+
+Common approaches include:
+
+- **RLHF (Reinforcement Learning from Human Feedback):** A process that uses human preference feedback; some pipelines train a reward model and then optimize the assistant with reinforcement learning.
+- **DPO (Direct Preference Optimization):** Trains from preferred and less-preferred responses without requiring the same separate reward-model-plus-RL loop as a traditional RLHF pipeline.
+- **Other methods:** Some systems use other preference or reinforcement-learning algorithms. Not all models use every method.
+
+These techniques aim to encourage more desirable responses, but their results depend on the data, objective, and evaluation process.
+
+### Step 15 — Evaluate quality and safety
+
+Test the model on representative prompts and failure cases. Evaluation may examine:
+
+- Instruction following and response relevance.
+- Factuality and reasoning performance.
+- Refusal behavior for disallowed requests.
+- Privacy and safety behavior.
+- Robustness to ambiguous, adversarial, or misleading prompts.
+- Performance across languages and user groups.
+
+Evaluation findings may lead to new data, more training, or changes to the training process. Guardrails at inference time can also be used; post-training alone does not solve every risk.
+
+**Output of post-training:** An instruction-tuned or assistant-oriented model that is generally better at responding to requests in the desired way.
+
+---
+
+## 6. Stage Four — Deployment and Inference
+
+**Inference** is when the trained model is used to generate an answer. The model's weights are normally fixed during ordinary inference, although systems may log feedback or be updated in later training runs.
+
+### Step 16 — Assemble the request context
+
+A deployed assistant may combine:
+
+- **System instructions:** Set the assistant's role, constraints, and response style.
+- **Conversation history:** Supplies the recent context needed to answer follow-up questions.
+- **User prompt:** The request that needs an answer.
+- **Optional retrieval (RAG/search):** Retrieves external information that may help with current or specialized questions.
+- **Optional tools or APIs:** Let the assistant perform actions such as calculations, searches, or application operations when enabled.
+
+Retrieval and tools are optional; a simple model can respond using only its prompt and learned parameters.
+
+### Step 17 — Tokenize the prompt
+
+The input text is converted to token IDs using the model's compatible tokenizer. The token IDs are prepared in the format expected by the deployed model.
+
+### Step 18 — Run a forward pass
+
+The model processes the input token sequence through its embedding and Transformer layers and calculates scores for possible next tokens. This is called a **forward pass**. During ordinary inference, no training loss or optimizer update is needed for each response.
+
+### Step 19 — Generate tokens iteratively
+
+A decoding strategy selects the next token from the model's output scores. The selected token is appended to the context, and the model predicts again. This continues until a stopping condition is reached, such as an end token or a maximum output length.
+
+Common decoding controls include:
+
+- **Greedy decoding:** Selects the highest-scoring token at each step.
+- **Temperature:** Adjusts the sharpness of the token probability distribution when sampling.
+- **Top-k / top-p sampling:** Restricts the candidates considered during sampling.
+- **Maximum new tokens:** Limits the length of generated output.
+
+The best settings depend on the model and application.
+
+### Step 20 — Decode and return the answer
+
+The generated token IDs are converted back into readable text. The application may then apply formatting, output checks, or policy controls before displaying the response.
+
+### Step 21 — Optional tools, retrieval, and monitoring
+
+A production system may retrieve updated documents, call tools, filter unsafe outputs, collect operational metrics, and monitor reliability. These system components are distinct from the model's own learned parameters.
+
+**Output of inference:** A response returned to the user. Using the model does not by itself mean that the model has learned permanently from that individual interaction.
+
+---
+
+## 7. How the Stages Differ
+
+| Question | Pre-training | Post-training | Deployment / inference |
+|---|---|---|---|
+| Main objective | Learn broad patterns from data | Improve instruction following and desired behavior | Answer a request |
+| Typical data | Large text or multimodal corpora | Instruction examples and/or preference data | Current prompt, context, optional retrieved data or tool results |
+| Are model weights updated? | Yes | Yes | Normally no |
+| Typical technique | Next-token prediction for causal LMs | SFT, preference optimization, RL methods, evaluation | Forward pass and token decoding |
+| Result | Base model | Assistant-oriented model | Response for the current request |
+
+---
+
+## 8. A Complete Example
+
+Imagine building an assistant that answers science questions.
+
+1. **Pre-training data:** Collect and prepare suitable text such as educational material, documentation, and other permitted sources.
+2. **Pre-training:** Train a causal language model to predict the next token over many batches. Save and evaluate checkpoints.
+3. **Base model:** Select a suitable checkpoint that has learned general language patterns.
+4. **Instruction examples:** Prepare high-quality science questions paired with clear answers.
+5. **SFT:** Fine-tune the model to respond directly to questions and follow the requested style.
+6. **Preference optimization (optional):** Use preference comparisons to improve response qualities such as clarity and usefulness.
+7. **Evaluation:** Test accuracy, instruction following, safety, and known failure cases.
+8. **Deployment:** Serve the model using an application or inference service.
+9. **Inference:** A user asks a question; the application builds the prompt, the model generates tokens, and the answer is returned.
+10. **Monitoring and improvement:** Review approved evaluations and feedback, then make carefully validated updates in later training or system releases.
+
+```text
+PRE-TRAINING               POST-TRAINING              DEPLOYMENT / INFERENCE
+─────────────              ──────────────              ──────────────────────
+Collect data               Instruction examples       Receive user prompt
+Clean and filter           Supervised fine-tuning     Build context
+Tokenize                   Preference tuning*        Tokenize prompt
+Predict next token         Evaluate safety/quality   Run model forward pass
+Calculate loss             Iterate and refine        Generate next tokens
+Update weights             Save assistant model      Decode and return answer
+      ↓                          ↓                            ↓
+   BASE MODEL              ASSISTANT MODEL              USER RESPONSE
+
+*Preference tuning is optional; pipelines vary.
+```
+
+---
+
+## 9. Important Terms
+
+| Term | Simple meaning |
+|---|---|
+| **Corpus** | A collection of documents used for analysis or training. |
+| **Tokenizer** | Converts text into tokens and token IDs. |
+| **Token ID** | An integer representing a token in a model's vocabulary. |
+| **Embedding** | A learned vector representation of a token. |
+| **Transformer** | A neural-network architecture used by many modern language models. |
+| **Self-attention** | A mechanism that lets representations incorporate information from relevant context positions. |
+| **Base model** | A model after pre-training, before assistant-specific post-training. |
+| **SFT** | Supervised fine-tuning on examples of desired responses. |
+| **RLHF** | Reinforcement learning from human feedback; one family of post-training methods. |
+| **DPO** | Direct Preference Optimization, a method that learns from preferred and less-preferred responses. |
+| **Loss** | A numerical measure of prediction error used during training. |
+| **Backpropagation** | Calculates gradients of the loss with respect to model parameters. |
+| **Optimizer** | Uses gradients to update model parameters. |
+| **Inference** | Running a trained model to produce outputs. |
+| **RAG** | Retrieval-augmented generation: retrieving external information and placing it into the model's context. |
+
+---
+
+## 10. Useful Links
+
+### Data and web crawling
+
+- [Common Crawl](https://commoncrawl.org/) — Open web-crawl archive.
+- [Common Crawl: Get Started](https://commoncrawl.org/get-started) — How to access Common Crawl data.
+- [Hugging Face Datasets](https://huggingface.co/docs/datasets) — Load and process datasets.
+
+### Tokenization and model training
+
+- [Hugging Face Tokenizers](https://huggingface.co/docs/tokenizers) — Tokenization concepts and tools.
+- [Hugging Face Transformers](https://huggingface.co/docs/transformers) — Model architectures, training, and inference.
+- [Causal Language Modeling Guide](https://huggingface.co/docs/transformers/tasks/language_modeling) — Fine-tune a causal language model.
+- [PyTorch](https://pytorch.org/docs/stable/index.html) — Tensors, automatic differentiation, and neural-network tools.
+
+### Post-training and deployment
+
+- [Hugging Face TRL](https://huggingface.co/docs/trl) — Tools for supervised fine-tuning and preference optimization.
+- [TRL Quickstart](https://huggingface.co/docs/trl/quickstart) — Examples of SFT, DPO, and other post-training approaches.
+- [Text Generation Inference](https://huggingface.co/docs/text-generation-inference) — Serving language models for inference.
+- [Hugging Face Model Hub](https://huggingface.co/models) — Explore available models.
+
+---
+
+## ✅ Final Summary
+
+- **Pre-training:** The model learns broad patterns from a large, prepared dataset, often by predicting the next token.
+- **Post-training:** The model is adapted to follow instructions and improve qualities such as helpfulness and safety using methods selected for the project.
+- **Deployment / inference:** The trained model receives context and generates a response; its weights are normally not updated during each request.
+
+> **Remember:** Pre-training builds a capable base model, post-training shapes it into a useful assistant, and inference is how people use it.
+---
 
 [⬆️ Back to Table of Contents](#-table-of-contents)
