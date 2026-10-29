@@ -3278,5 +3278,309 @@ Update weights             Save assistant model      Decode and return answer
 
 > **Remember:** Pre-training builds a capable base model, post-training shapes it into a useful assistant, and inference is how people use it.
 ---
+<div align="center">
+
+# 🧠 Supervised Fine-Tuning (SFT)
+
+### How a pretrained language model learns to follow instructions
+
+**AI / LLM Notes • Post-training • Concepts, training loop, diagrams, and examples**
+
+</div>
+
+---
+
+## 1. What Is Supervised Fine-Tuning?
+
+**Supervised Fine-Tuning (SFT)** is a post-training method in which a pretrained model is trained on curated examples that pair an input (such as a prompt or conversation) with a desired output.
+
+The goal is to adapt the model's existing capabilities so it responds in ways demonstrated by the training examples—for example, answering questions, following instructions, using a requested format, or adopting a particular assistant style.
+
+> **Remember:** Pre-training teaches a model broad patterns from large-scale data. SFT teaches it to imitate desired responses from supervised examples.
+
+SFT is commonly used to create an **instruction-tuned model** from a pretrained base model.
+
+## 2. The Big Picture — Pictorial Flow
+
+```mermaid
+flowchart TD
+    A["Large-scale pretraining data"] --> B["Pretraining"]
+    B --> C["Pretrained base model"]
+    D["Curated prompt + ideal answer examples"] --> E["Tokenize and format examples"]
+    C --> F["Initialize SFT training"]
+    E --> F
+    F --> G["Model predicts answer tokens"]
+    G --> H["Calculate supervised training loss"]
+    H --> I["Backpropagate gradients"]
+    I --> J["Optimizer updates model parameters"]
+    J --> K{"More training steps?"}
+    K -- Yes --> G
+    K -- No --> L["Evaluate on held-out examples"]
+    L --> M["Instruction-tuned / SFT model"]
+```
+
+### Read the flowchart
+
+1. Start with a **pretrained base model**.
+2. Prepare high-quality examples of prompts and desired responses.
+3. Format and tokenize the examples.
+4. Train the model to predict the desired response tokens.
+5. Calculate the loss, backpropagate gradients, and update parameters.
+6. Repeat over batches and training steps.
+7. Evaluate the resulting model on examples it did not train on.
+
+SFT does not always require updating every parameter. Full fine-tuning updates many or all model parameters; parameter-efficient approaches such as LoRA train a smaller set of added parameters.
+
+---
+
+## 3. What Does an SFT Dataset Look Like?
+
+A supervised example has an input and a target response. For chat models, examples often contain a sequence of messages with roles such as `user` and `assistant`.
+
+### Simple example
+
+| Input / prompt | Desired assistant response |
+|---|---|
+| Explain AI in simple words. | AI is technology that enables computers to perform tasks that usually require human intelligence. |
+| What is React? | React is a JavaScript library for building user interfaces. |
+| Return the answer as JSON. | `{"answer":"..."} ` |
+
+The model is trained on many examples, not just these few.
+
+### Chat-style example
+
+```text
+User: What is photosynthesis? Explain simply.
+Assistant: Photosynthesis is how plants use sunlight, water, and carbon dioxide to make sugar. Oxygen is released in the process.
+```
+
+For a real dataset, messages are usually serialized into the format expected by the model or training framework. Some formats use special tokens to mark message boundaries, roles, and the end of an assistant turn.
+
+### What makes a good SFT dataset?
+
+- **Correctness:** Target responses should be accurate and useful.
+- **Consistency:** Similar tasks should follow consistent standards.
+- **Coverage:** Include the tasks, styles, and edge cases the model needs to handle.
+- **Quality control:** Review noisy, contradictory, duplicated, or harmful examples.
+- **Privacy and permissions:** Use data that can appropriately be used for training.
+- **Train/validation/test separation:** Keep evaluation examples separate from training examples to measure generalization.
+
+---
+
+## 4. What Happens Inside the SFT Training Loop?
+
+```mermaid
+flowchart TD
+    A["Select a batch of examples"] --> B["Tokenize / prepare input"]
+    B --> C["Forward pass"]
+    C --> D["Predicted next-token probabilities"]
+    D --> E["Compare predictions with target tokens"]
+    E --> F["Compute loss"]
+    F --> G["Backpropagation"]
+    G --> H["Optimizer step"]
+    H --> I["Update parameters"]
+    I --> J["Next batch / training step"]
+    J --> A
+```
+
+### Step 1 — Select a batch
+
+A batch contains several supervised examples, often with different prompt and response lengths.
+
+### Step 2 — Tokenize and format
+
+Text is converted into token IDs. Chat formatting may identify the user message, assistant response, and end-of-turn markers.
+
+### Step 3 — Forward pass
+
+The model processes the context and produces a probability distribution over possible next tokens at each prediction position.
+
+### Step 4 — Calculate loss
+
+The predicted distribution is compared with the target token. Language-model SFT commonly uses **cross-entropy loss** over target tokens.
+
+A simplified expression is:
+
+\[
+\mathcal{L}(\theta) = -\sum_{t \in T} \log P_\theta(y_t \mid x, y_{<t})
+\]
+
+Where:
+
+- \(\theta\) = model parameters
+- \(x\) = prompt / context
+- \(y_t\) = target token at position \(t\)
+- \(y_{<t}\) = earlier target tokens
+- \(T\) = positions included in the loss
+
+In many instruction-tuning setups, the loss is calculated mainly on assistant target tokens rather than on the user prompt tokens. The exact masking strategy depends on the training setup.
+
+### Step 5 — Backpropagation
+
+Backpropagation calculates gradients that indicate how model parameters contributed to the loss.
+
+### Step 6 — Optimizer update
+
+An optimizer, often a variant of AdamW, uses the gradients to update trainable parameters. The aim is to reduce the training objective over time.
+
+### Step 7 — Repeat and evaluate
+
+The process repeats across batches and epochs or a chosen number of training steps. Evaluate on held-out examples to check quality and detect overfitting.
+
+---
+
+## 5. A Visual Example: Learning the Desired Response
+
+Imagine the target training example is:
+
+**Prompt:** `Explain gravity in one sentence.`
+
+**Target answer:** `Gravity is the force of attraction between objects with mass.`
+
+```text
+                  SUPERVISED EXAMPLE
+┌────────────────────────────────────────────────────┐
+│ Prompt: Explain gravity in one sentence.           │
+│ Target: Gravity is the force of attraction ...      │
+└────────────────────────────────────────────────────┘
+                         │
+                         ▼
+                 PRETRAINED MODEL
+                         │
+                         ▼
+             Predicts a sequence of tokens
+                         │
+                         ▼
+           Compare prediction to target tokens
+                         │
+                         ▼
+                 Calculate loss
+                         │
+                         ▼
+           Backpropagation + optimizer update
+                         │
+                         ▼
+       Model becomes more likely to predict target
+       responses for similar contexts over training
+```
+
+This does **not** mean the model simply stores every answer as a lookup table. The training process adjusts parameters so that patterns in the examples influence future predictions. Results depend on dataset quality, model capacity, optimization, and evaluation.
+
+---
+
+## 6. SFT vs Pretraining vs Preference Optimization
+
+| Stage / method | Training signal | Main purpose |
+|---|---|---|
+| **Pretraining** | Large-scale text or other data; often next-token prediction | Learn broad patterns and representations |
+| **SFT** | Examples with desired outputs | Teach the model to imitate target responses and follow instructions |
+| **Preference optimization** | Comparisons or preference signals, depending on the method | Encourage responses preferred under the chosen criteria |
+| **Reinforcement learning** | Reward signal and a policy optimization procedure | Optimize behavior according to a reward objective |
+
+These methods can be combined in different orders. Preference optimization or reinforcement learning is not required for every SFT model.
+
+### Typical post-training pipeline
+
+```mermaid
+flowchart LR
+    A["Pretrained base model"] --> B["SFT with demonstrations"]
+    B --> C["Instruction-tuned model"]
+    C --> D["Optional preference optimization / RL"]
+    D --> E["Evaluate and deploy"]
+```
+
+---
+
+## 7. Important SFT Terms
+
+| Term | Meaning |
+|---|---|
+| **Base model** | Model produced by pretraining before instruction-focused post-training |
+| **Supervised example** | Input paired with a desired target output |
+| **Target tokens** | Tokens the model is trained to predict |
+| **Tokenization** | Converting text into token IDs |
+| **Forward pass** | Computing the model's predictions |
+| **Loss** | Numerical measure of the difference between predictions and targets |
+| **Backpropagation** | Computing gradients of the loss |
+| **Optimizer** | Uses gradients to update trainable parameters |
+| **Batch** | Group of examples processed together |
+| **Epoch** | One pass through the training dataset |
+| **Overfitting** | When training performance improves but performance on new examples does not improve or gets worse |
+| **Generalization** | Ability to perform well on unseen examples |
+| **LoRA / PEFT** | Methods that fine-tune a model by training a smaller set of parameters rather than updating all base parameters |
+
+---
+
+## 8. Benefits and Limitations of SFT
+
+### Benefits
+
+- Improves instruction-following behavior.
+- Teaches desired response formats and task patterns.
+- Can adapt a general model to a domain or workflow.
+- Can make a model more consistent with curated examples.
+- Can be used with full fine-tuning or parameter-efficient methods.
+
+### Limitations
+
+- The model can imitate errors or biases present in the examples.
+- Low-quality or narrow data can reduce performance on other tasks.
+- SFT does not guarantee factual accuracy or eliminate hallucinations.
+- Overfitting can occur if the model learns the training examples too narrowly.
+- Training can require substantial compute, depending on model size and method.
+- A fine-tuned model still needs careful evaluation and deployment safeguards.
+
+---
+
+## 9. Common Misconceptions
+
+- **SFT is not pretraining.** It starts from a pretrained model and adapts it using supervised examples.
+- **SFT is not just adding facts to a database.** It changes trainable parameters to improve the model's learned behavior.
+- **SFT does not guarantee perfect answers.** The model can still make mistakes.
+- **SFT does not always update every parameter.** LoRA and other PEFT methods update a smaller set of trainable parameters.
+- **SFT is not the same as RLHF.** SFT learns from target demonstrations; RLHF commonly uses human preference data and a reward-based or preference-optimization stage.
+
+---
+
+## 10. Quick Interview Questions
+
+1. What is Supervised Fine-Tuning (SFT)?
+2. Why do we start SFT from a pretrained model?
+3. What is the difference between pretraining and SFT?
+4. What does a supervised instruction-tuning example contain?
+5. Why is tokenization required?
+6. What is the role of cross-entropy loss in language-model SFT?
+7. What are the roles of backpropagation and an optimizer?
+8. Why might training loss decrease while validation quality gets worse?
+9. What is the difference between full fine-tuning and LoRA?
+10. Does SFT guarantee that a model will always be correct?
+11. How is SFT different from preference optimization or RLHF?
+12. Why must we evaluate on data not used for training?
+
+### Interview-ready answer
+
+> Supervised Fine-Tuning is a post-training technique that adapts a pretrained model using curated input-output examples. The model predicts target tokens, computes a loss—commonly cross-entropy—then uses backpropagation and an optimizer to update its trainable parameters. Repeating this process helps the model imitate desired responses and follow instructions. The resulting model must still be evaluated for generalization, reliability, and safety.
+
+---
+
+## ✅ Final Summary
+
+**Pretraining builds broad model capabilities. SFT uses examples of desired behavior to adapt those capabilities into instruction-following behavior.** The core loop is:
+
+**Examples → Tokenization → Forward pass → Loss → Backpropagation → Parameter update → Evaluation**
+
+SFT is an important part of modern language-model post-training, but it is only one component of building a reliable AI assistant.
+
+---
+
+## 📚 Further Learning
+
+- [Hugging Face Transformers documentation](https://huggingface.co/docs/transformers)
+- [Hugging Face TRL documentation](https://huggingface.co/docs/trl)
+- [Hugging Face PEFT documentation](https://huggingface.co/docs/peft)
+
+---
+
+---
 
 [⬆️ Back to Table of Contents](#-table-of-contents)
